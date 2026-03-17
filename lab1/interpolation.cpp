@@ -1,8 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <cmath>
 #include <algorithm>
 #include <iomanip>
+#include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 using Point = std::pair<double, double>;
 
@@ -71,7 +75,7 @@ double newton1(const std::vector<Point>& points, double x) {
 }
 
 double newton2(double x, double h, double a, double b) {
-    auto f = [](double x) { return std::exp(1.0) - std::pow(std::log(x), 2); };
+    auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
 
     int n = static_cast<int>((b - a) / h) + 1;
     std::vector<Point> points(n);
@@ -121,7 +125,7 @@ double newton2(double x, double h, double a, double b) {
 }
 
 double stirling(double x, double h, double a, double b) {
-    auto f = [](double x) { return std::exp(1.0) - std::pow(std::log(x), 2); };
+    auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
 
     int n = static_cast<int>((b - a) / h) + 1;
     std::vector<Point> points(n);
@@ -171,35 +175,34 @@ double stirling(double x, double h, double a, double b) {
 
 int main() {
     std::vector<Point> points = {
-        {11.153, -3.234},
-        {11.454, 5.321},
-        {11.673, -1.123},
-        {11.879, 0.393},
-        {12.009, 8.939},
-        {12.231, 141.231},
-        {12.549, 15.001}
+        {-11.02, 21.1230},
+        {-10.78, 22.8279},
+        {-10.23, 25.0046},
+        {-9.89, 27.5928},
+        {-9.65, 28.9933},
+        {-9.03, 29.1933},
     };
-    double h = 1;
-    double a = 1;
-    double b = 5;
+    double h = 0.4;
+    double a = 0;
+    double b = 2;
 
-    double x = 12.776;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << lagrange(points, x) << std::endl;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << aitken(points, x) << std::endl;
+    double x = -9.22;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << lagrange(points, x) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << aitken(points, x) << std::endl;
     std::cout << std::endl;
 
-    double x1 = 11.515;
-    double x2 = 11.995;
-    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton1(points, x1) << std::endl;
-    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton1(points, x2) << std::endl;
+    double x1 = -10.44;
+    double x2 = -9.41;
+    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(4) << newton1(points, x1) << std::endl;
+    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(4) << newton1(points, x2) << std::endl;
     std::cout << std::endl;
 
-    x1 = 0.77;
-    x2 = 4.82;
-    x = 3.2;
-    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton2(x1, h, a, b) << std::endl;
-    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton2(x2, h, a, b) << std::endl;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << newton2(x, h, a, b) << std::endl;
+    x1 = -0.78;
+    x2 = 1.43;
+    x = 0.50;
+    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(4) << newton2(x1, h, a, b) << std::endl;
+    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(4) << newton2(x2, h, a, b) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << newton2(x, h, a, b) << std::endl;
     std::cout << std::endl;
 
     return 0;
