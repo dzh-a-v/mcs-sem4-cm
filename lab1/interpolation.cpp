@@ -4,9 +4,7 @@
 #include <iomanip>
 #include <cmath>
 
-#ifndef M_PI
 #define M_PI 3.14
-#endif
 
 using Point = std::pair<double, double>;
 
