@@ -202,7 +202,7 @@ int main() {
     x = 0.50;
     std::cout << " " << x1 << ": " << std::fixed << std::setprecision(4) << newton2(x1, h, a, b) << std::endl;
     std::cout << " " << x2 << ": " << std::fixed << std::setprecision(4) << newton2(x2, h, a, b) << std::endl;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << newton2(x, h, a, b) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << stirling(x, h, a, b) << std::endl;
     std::cout << std::endl;
 
     return 0;
