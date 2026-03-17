@@ -5,7 +5,7 @@
 #include <cmath>
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI 3.14
 #endif
 
 using Point = std::pair<double, double>;
@@ -124,7 +124,7 @@ double newton2(double x, double h, double a, double b) {
     return res;
 }
 
-double stirling(double x, double h, double a, double b) {
+double bessel(double x, double h, double a, double b) {
     auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
 
     int n = static_cast<int>((b - a) / h) + 1;
@@ -148,26 +148,43 @@ double stirling(double x, double h, double a, double b) {
         diff.push_back(row);
     }
 
-    int center = n / 2;
-    double x0 = points[center].first;
-    double t = (x - x0) / h;
-
-    double res = diff[0][center];
-
-    if (n > 1) {
-        res += t * (diff[1][center-1] + diff[1][center]) / 2;
+    int k = 0;
+    for (int i = 0; i < n - 1; ++i) {
+        if (points[i].first <= x && x < points[i+1].first) {
+            k = i;
+            break;
+        }
     }
 
-    if (n > 2) {
-        res += t * t / 2 * diff[2][center-1];
+    double x0 = points[k].first;
+    double q = (x - x0) / h;
+
+    double res = diff[0][k];
+
+    if (n >= 2) {
+        res += q * diff[1][k];
     }
 
-    if (n > 3) {
-        res += t * (t * t - 1) / 6 * (diff[3][center-2] + diff[3][center-1]) / 2;
+    if (n >= 3 && k >= 1) {
+        double coeff = q * (q - 1) / 2;
+        double avg = (diff[2][k-1] + diff[2][k]) / 2;
+        res += coeff * avg;
     }
 
-    if (n > 4) {
-        res += t * t * (t * t - 1) / 24 * diff[4][center-2];
+    if (n >= 4 && k >= 1) {
+        double coeff = q * (q - 1) * (q - 0.5) / 6;
+        res += coeff * diff[3][k-1];
+    }
+
+    if (n >= 5 && k >= 2) {
+        double coeff = q * (q * q - 1) * (q - 2) / 24;
+        double avg = (diff[4][k-2] + diff[4][k-1]) / 2;
+        res += coeff * avg;
+    }
+
+    if (n >= 6 && k >= 2) {
+        double coeff = q * (q * q - 1) * (q - 0.5) * (q - 2) / 120;
+        res += coeff * diff[5][k-2];
     }
 
     return res;
@@ -187,22 +204,22 @@ int main() {
     double b = 2;
 
     double x = -9.22;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << lagrange(points, x) << std::endl;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << aitken(points, x) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << lagrange(points, x) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << aitken(points, x) << std::endl;
     std::cout << std::endl;
 
     double x1 = -10.44;
     double x2 = -9.41;
-    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(4) << newton1(points, x1) << std::endl;
-    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(4) << newton1(points, x2) << std::endl;
+    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton1(points, x1) << std::endl;
+    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton1(points, x2) << std::endl;
     std::cout << std::endl;
 
     x1 = -0.78;
     x2 = 1.43;
     x = 0.50;
-    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(4) << newton2(x1, h, a, b) << std::endl;
-    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(4) << newton2(x2, h, a, b) << std::endl;
-    std::cout << " " << x << ": " << std::fixed << std::setprecision(4) << stirling(x, h, a, b) << std::endl;
+    std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton2(x1, h, a, b) << std::endl;
+    std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton2(x2, h, a, b) << std::endl;
+    std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << bessel(x, h, a, b) << std::endl;
     std::cout << std::endl;
 
     return 0;
