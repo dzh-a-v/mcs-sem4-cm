@@ -1,3 +1,5 @@
+ref*
+
 # Build directories
 build/
 cmake-build-*/

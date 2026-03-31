@@ -14,8 +14,8 @@ if %ERRORLEVEL% neq 0 (
 cd ..
 echo Build successful!
 echo.
-if exist "build\Debug\main.exe" (
-    build\Debug\main.exe
-) else if exist "build\main.exe" (
-    build\main.exe
+if exist "build\Debug\interpolation.exe" (
+    build\Debug\interpolation.exe
+) else if exist "build\interpolation.exe" (
+    build\interpolation.exe
 )

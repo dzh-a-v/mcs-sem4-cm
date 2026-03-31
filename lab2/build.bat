@@ -11,11 +11,4 @@ if %ERRORLEVEL% neq 0 (
     echo Build failed!
     exit /b %ERRORLEVEL%
 )
-cd ..
 echo Build successful!
-echo.
-if exist "build\Debug\main.exe" (
-    build\Debug\main.exe
-) else if exist "build\main.exe" (
-    build\main.exe
-)
