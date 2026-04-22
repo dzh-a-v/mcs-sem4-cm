@@ -1,0 +1,457 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{russian}
+\setmainfont{Times New Roman}
+%\setmonofont{DejaVy Sans Mono}[Scale=MatchLowercase]
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{geometry}
+\geometry{left=30mm, right=15mm, top=20mm, bottom=20mm}
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+%\usepackage{url}
+\usepackage{xurl}
+\urlstyle{same} % для переносов в ссылках
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{ragged2e} % для justifying
+\usepackage{wasysym} % для космических символов
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{array}
+
+\lstset{
+	language=C++,
+	basicstyle=\small,
+	keywordstyle=\color{blue},
+	stringstyle=\color{red},
+	commentstyle=\color{green!50!black},
+	showstringspaces=false,
+	breaklines=true,
+	frame=single,
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	stepnumber=1,
+	keepspaces=true, % <-- важно для корректного отображения
+	extendedchars=true,
+	inputencoding=utf8
+}
+
+\begin{document}
+	
+	\sloppy
+	\thispagestyle{empty}
+	\centering{
+		МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ\\
+		РОССИЙСКОЙ ФЕДЕРАЦИИ\\
+		Федеральное государственное автономное образовательное учреждение высшего образования <<Санкт-Петербургский политехнический университет Петра Великого>>\\[10pt]
+		Институт компьютерных наук и кибербезопасности\\
+		Высшая школа технологий искусственного интеллекта\\
+		02.03.01 Математика и компьютерные науки\\
+		\vspace{\fill}
+		{\large
+			Отчёт о лабораторной работе\\
+			по дисциплине\\
+			{\Large \bfseries Вычислительная математика}\\
+			{\Large <<Вычисление приближённого значения табличной функции>>}\\
+			Вариант 18\\
+			\vspace{\fill}
+		}
+		
+		{
+			\flushright
+			{\bfseries Выполнил:}\\
+			студент группы 5130201/40003\\
+			Джабраилов А.В.\\
+			\hspace{9cm}Подпись: \hrulefill \\
+			{\bfseries Принял:}\\
+			К. физ.-мат. наук, доц., доц.\\
+			Пак В.Г.\\
+			\hspace{9cm}Подпись: \hrulefill \\
+			
+			\hspace{9cm}<<\rule{1.5cm}{0.4pt}>> \hrulefill\ 2026~г.
+		}
+		
+		\centering{
+			Санкт-Петербург, 2026
+		}
+	}
+	
+	\justifying
+	
+	\newpage
+	\sloppy
+	
+	\section{Задание}
+	Построить по таблице заданный интерполяционный многочлен, вычислить с помощью него приближённое значение функции в данной точке.
+	
+	\section{Цель работы}
+	Научиться вычислять приближённые значения функции с помощью полиномиальной интерполяции и оценивать погрешность интерполяции.
+	
+	\section{Ход работы}
+	Ниже приведена таблица функции для вычисления значения по многочлену Лагранжа (задание 1), по схеме Эйткена (задание 2) и многочлену Ньютона (задание 3):
+	
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|}
+			\hline
+			$x_i$ & $y_i$ \\ \hline
+			-11,02 & 21,1230 \\ \hline
+			-10,78 & 22,8279 \\ \hline
+			-10,23 & 25,0046 \\ \hline
+			-9,89 & 27,5928 \\ \hline
+			-9,65 & 28,9933 \\ \hline
+			-9,03 & 29,1933 \\ \hline
+		\end{tabular}
+	\end{table}
+	
+	Для выполнения заданий данной лабораторной работы была создана программа на языке C++ (см. раздел \hyperref[code]{"Приложение"}). 
+	
+	\newpage
+	
+	\subsection{Задание 1. По формуле Лагранжа}
+	Найти приближённое значение функции при $x= -9,22$. Ниже приведён листинг кода функции, которая вычисляет значение по многочлену Лагранжа:
+	
+	\begin{lstlisting}[label=lag]
+double lagrange(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	double res = 0.0;
+	for (int i = 0; i < n; ++i) {
+		double xi = points[i].first;
+		double yi = points[i].second;
+		double t = 1.0;
+// ...
+	\end{lstlisting}
+	
+	Для данной таблицы значение в точке $x= -9,22$: $y(-9,22) = 29,18$.
+	
+	\subsection{Задание 2. По схеме Эйткена}
+	Найти приближённое значение функции при $x= -9,22$. Ниже приведён листинг кода функции, которая вычисляет значение по схеме Эйткена:
+	
+	\begin{lstlisting}
+double aitken(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	std::vector<std::vector<double>> p(n, std::vector<double>(n, 0.0));
+	for (int i = 0; i < n; ++i) {
+		p[i][i] = points[i].second;
+	}
+// ...
+	\end{lstlisting}
+	
+	Для данной таблицы значение в точке $x= -9,22$: $y(-9,22) = 29,18$.
+	
+	\subsection{Задание 3. По многочлену Ньютона с разделёнными разностями}
+	Найти приближённое значение функции в точках $x_1= -10,44$ и $x_2= -9,41$. Ниже приведён листинг кода функции:
+	
+	\begin{lstlisting}
+double newton1(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	std::vector<Point> sorted_points = points;
+	std::sort(sorted_points.begin(), sorted_points.end());
+	std::vector<double> work(n);
+	for (int i = 0; i < n; ++i) {
+		work[i] = sorted_points[i].second;
+	}
+// ...
+	\end{lstlisting}
+	
+	Для данной таблицы значения в указанных точках: $y(-10,44) = 23,83$; $y(-9,41) = 29,41$.
+	
+	\subsection{Задание 4. По многочлену Ньютона с конечными разностями}
+	Для выполнения заданий №4 и №5 была дана следующая функция $f(x)$ с шагом $h$ от $a$ до $b$:
+	
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$f(x)$ & $h$ & $a$ & $b$ \\ \hline
+			$x^{5/\pi}$ & 0,4 & 0 & 2 \\ \hline
+		\end{tabular}
+	\end{table}
+	
+	Ниже приведён листинг кода функции для вычисления по многочлену Ньютона с конечными разностями:
+	
+	\begin{lstlisting}
+double newton2(double x, double h, double a, double b) {
+	auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
+	int n = static_cast<int>((b - a) / h) + 1;
+	std::vector<Point> points(n);
+	for (int i = 0; i < n; ++i) {
+		points[i] = {a + i * h, f(a + i * h)};
+	}
+	std::vector<std::vector<double>> diff;
+	std::vector<double> y(n);
+	for (int i = 0; i < n; ++i) {
+		y[i] = points[i].second;
+	}
+// ...
+	\end{lstlisting}
+	
+	Для данной таблицы значения в указанных точках: $y(-0,78) = 0,8578$; $y(1,43) = 1,77$.
+	
+	\subsection{Задание 5. По подходящему многочлену (Гаусса, Стирлинга или Бесселя)}
+	У нас чётное число узлов (шаг 0.4, начало 0, конец 2), поэтому применяется многочлен Бесселя. Ниже приведён листинг года для вычисления ответа на данное задание:
+	
+	\begin{lstlisting}
+double bessel(double x, double h, double a, double b) {
+	auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
+	
+	int n = static_cast<int>((b - a) / h) + 1;
+	std::vector<Point> points(n);
+	for (int i = 0; i < n; ++i) {
+		points[i] = {a + i * h, f(a + i * h)};
+	}
+// ...
+	\end{lstlisting}
+	
+	Для данной таблицы значение в точке $x= 0,50$: $y(0,50) = 0,33$.
+	
+	\newpage
+	
+	\section{Результаты}
+	Ответы:
+	\begin{enumerate}
+		\item $y(-9,22) = 29,18$
+		\item $y(-9,22) = 29,18$
+		\item $y(-10,44) = 23,83$; $y(-9,41) = 29,41$
+		\item $y(-0,78) = 0,86$; $y(1,43) = 1,77$
+		\item $y(0,50) = 0,33$
+	\end{enumerate}
+	
+	\newpage
+	
+	\section{Приложение}
+	\label{code}
+	\begin{lstlisting}
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <cmath>
+
+#define M_PI 3.14
+
+using Point = std::pair<double, double>;
+
+double lagrange(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	double res = 0.0;
+	
+	for (int i = 0; i < n; ++i) {
+		double xi = points[i].first;
+		double yi = points[i].second;
+		double t = 1.0;
+		for (int j = 0; j < n; ++j) {
+			if (j != i) {
+				double xj = points[j].first;
+				t *= (x - xj) / (xi - xj);
+			}
+		}
+		res += yi * t;
+	}
+	
+	return res;
+}
+
+double aitken(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	std::vector<std::vector<double>> p(n, std::vector<double>(n, 0.0));
+	
+	for (int i = 0; i < n; ++i) {
+		p[i][i] = points[i].second;
+	}
+	
+	for (int k = 1; k < n; ++k) {
+		for (int i = 0; i < n - k; ++i) {
+			int j = i + k;
+			double xi = points[i].first;
+			double xj = points[j].first;
+			p[i][j] = (p[i][j-1] * (xj - x) - p[i+1][j] * (xi - x)) / (xj - xi);
+		}
+	}
+	
+	return p[0][n-1];
+}
+
+double newton1(const std::vector<Point>& points, double x) {
+	int n = points.size();
+	std::vector<Point> sorted_points = points;
+	std::sort(sorted_points.begin(), sorted_points.end());
+	
+	std::vector<double> work(n);
+	for (int i = 0; i < n; ++i) {
+		work[i] = sorted_points[i].second;
+	}
+	
+	double res = work[0];
+	double prod = 1.0;
+	
+	for (int j = 1; j < n; ++j) {
+		for (int i = 0; i < n - j; ++i) {
+			work[i] = (work[i+1] - work[i]) / (sorted_points[i+j].first - sorted_points[i].first);
+		}
+		prod *= (x - sorted_points[j-1].first);
+		res += work[0] * prod;
+	}
+	
+	return res;
+}
+
+double newton2(double x, double h, double a, double b) {
+	auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
+	
+	int n = static_cast<int>((b - a) / h) + 1;
+	std::vector<Point> points(n);
+	for (int i = 0; i < n; ++i) {
+		points[i] = {a + i * h, f(a + i * h)};
+	}
+	
+	std::vector<std::vector<double>> diff;
+	std::vector<double> y(n);
+	for (int i = 0; i < n; ++i) {
+		y[i] = points[i].second;
+	}
+	diff.push_back(y);
+	
+	for (int j = 1; j < n; ++j) {
+		std::vector<double> row;
+		for (int i = 0; i < n - j; ++i) {
+			row.push_back(diff[j-1][i+1] - diff[j-1][i]);
+		}
+		diff.push_back(row);
+	}
+	
+	double res;
+	if (x > (a + b) / 2) {
+		double t = (x - points.back().first) / h;
+		res = diff[0].back();
+		double term = 1;
+		double fact = 1;
+		for (int j = 1; j < n; ++j) {
+			term *= (t + j - 1);
+			fact *= j;
+			res += diff[j].back() * term / fact;
+		}
+	} else {
+		double t = (x - points[0].first) / h;
+		res = diff[0][0];
+		double term = 1;
+		double fact = 1;
+		for (int j = 1; j < n; ++j) {
+			term *= (t - j + 1);
+			fact *= j;
+			res += diff[j][0] * term / fact;
+		}
+	}
+	
+	return res;
+}
+
+double bessel(double x, double h, double a, double b) {
+	auto f = [](double x) { return std::pow(x, 5.0 / M_PI); };
+	
+	int n = static_cast<int>((b - a) / h) + 1;
+	std::vector<Point> points(n);
+	for (int i = 0; i < n; ++i) {
+		points[i] = {a + i * h, f(a + i * h)};
+	}
+	
+	std::vector<std::vector<double>> diff;
+	std::vector<double> y(n);
+	for (int i = 0; i < n; ++i) {
+		y[i] = points[i].second;
+	}
+	diff.push_back(y);
+	
+	for (int j = 1; j < n; ++j) {
+		std::vector<double> row;
+		for (int i = 0; i < n - j; ++i) {
+			row.push_back(diff[j-1][i+1] - diff[j-1][i]);
+		}
+		diff.push_back(row);
+	}
+	
+	int k = 0;
+	for (int i = 0; i < n - 1; ++i) {
+		if (points[i].first <= x && x < points[i+1].first) {
+			k = i;
+			break;
+		}
+	}
+	
+	double x0 = points[k].first;
+	double q = (x - x0) / h;
+	
+	double res = diff[0][k];
+	
+	if (n >= 2) {
+		res += q * diff[1][k];
+	}
+	
+	if (n >= 3 && k >= 1) {
+		double coeff = q * (q - 1) / 2;
+		double avg = (diff[2][k-1] + diff[2][k]) / 2;
+		res += coeff * avg;
+	}
+	
+	if (n >= 4 && k >= 1) {
+		double coeff = q * (q - 1) * (q - 0.5) / 6;
+		res += coeff * diff[3][k-1];
+	}
+	
+	if (n >= 5 && k >= 2) {
+		double coeff = q * (q * q - 1) * (q - 2) / 24;
+		double avg = (diff[4][k-2] + diff[4][k-1]) / 2;
+		res += coeff * avg;
+	}
+	
+	if (n >= 6 && k >= 2) {
+		double coeff = q * (q * q - 1) * (q - 0.5) * (q - 2) / 120;
+		res += coeff * diff[5][k-2];
+	}
+	
+	return res;
+}
+
+int main() {
+	std::vector<Point> points = {
+		{-11.02, 21.1230},
+		{-10.78, 22.8279},
+		{-10.23, 25.0046},
+		{-9.89, 27.5928},
+		{-9.65, 28.9933},
+		{-9.03, 29.1933},
+	};
+	double h = 0.4;
+	double a = 0;
+	double b = 2;
+	
+	double x = -9.22;
+	std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << lagrange(points, x) << std::endl;
+	std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << aitken(points, x) << std::endl;
+	std::cout << std::endl;
+	
+	double x1 = -10.44;
+	double x2 = -9.41;
+	std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton1(points, x1) << std::endl;
+	std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton1(points, x2) << std::endl;
+	std::cout << std::endl;
+	
+	x1 = -0.78;
+	x2 = 1.43;
+	x = 0.50;
+	std::cout << " " << x1 << ": " << std::fixed << std::setprecision(2) << newton2(x1, h, a, b) << std::endl;
+	std::cout << " " << x2 << ": " << std::fixed << std::setprecision(2) << newton2(x2, h, a, b) << std::endl;
+	std::cout << " " << x << ": " << std::fixed << std::setprecision(2) << bessel(x, h, a, b) << std::endl;
+	std::cout << std::endl;
+	
+	return 0;
+}
+	\end{lstlisting}
+	
+\end{document}
