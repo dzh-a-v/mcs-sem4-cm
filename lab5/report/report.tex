@@ -1,0 +1,378 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{russian}
+\setmainfont{Times New Roman}
+\setmonofont{Courier New}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{geometry}
+\geometry{left=30mm, right=15mm, top=20mm, bottom=20mm}
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\usepackage{xurl}
+\urlstyle{same}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{wasysym}
+\allowdisplaybreaks[3]
+
+\lstset{
+language=Python,
+basicstyle=\small,
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+commentstyle=\color{green!50!black},
+showstringspaces=false,
+breaklines=true,
+frame=single,
+numbers=left,
+numberstyle=\tiny\color{gray},
+stepnumber=1,
+keepspaces=true,
+extendedchars=true,
+inputencoding=utf8
+}
+
+\newcommand{\num}[1]{#1}
+
+\begin{document}
+\sloppy
+\thispagestyle{empty}
+\centering{
+Министерство образования и науки Российской Федерации\\
+Федеральное государственное автономное образовательное учреждение высшего образования\\
+«Санкт-Петербургский политехнический университет Петра Великого»\\[10pt]
+Институт компьютерных наук и кибербезопасности\\
+Высшая школа технологий искусственного интеллекта\\
+02.03.01 Математика и компьютерные науки\\
+\vspace{\fill}
+{\large
+Отчёт по дисциплине\\
+{\Large \bfseries Вычислительная математика}\\
+Лабораторная работа №5\\
+{\Large <<Дискретное преобразование Фурье>>}\\
+Вариант 18\\
+\vspace{\fill}
+}
+{
+\flushright
+{\bfseries Выполнил:}\\
+студент группы 5130201/40003\\
+Джабраилов А.В.\\
+\hspace{9cm}Подпись: \hrulefill \\
+{\bfseries Принял:}\\
+К. физ.-мат. наук, доц., доц.\\
+Пак В.Г.\\
+\hspace{9cm}Подпись: \hrulefill \\
+\hspace{9cm}<<\rule{1.5cm}{0.4pt}>> \hrulefill\ 2026~г.
+}
+\centering{
+Санкт-Петербург, 2026
+}
+}
+\justifying
+\newpage
+\sloppy
+
+\section*{1 Задание}
+\begin{enumerate}
+    \item Применяя дискретное преобразование Фурье для данного набора сигналов, получить вектор амплитуд, затем по нему обратным преобразованием получить исходный сигнал.
+    \item Применяя быстрое преобразование Фурье с прореживанием по времени по основанию 2 для данного набора сигналов, получить векторы амплитуд по чётным и нечётным отсчётам, вектор амплитуд по всем отсчётам; затем по нему обратным преобразованием получить векторы обратных преобразований по чётным и нечётным отсчётам и исходный сигнал.
+\end{enumerate}
+
+\section*{2 Цель работы}
+Освоить алгоритмы дискретного и быстрого преобразований Фурье, реализовать прямое и обратное преобразования для заданного дискретного сигнала и проверить восстановление исходных отсчётов.
+
+\newpage
+
+\section*{3 Ход работы}
+Исходные данные варианта 18 содержат $n=16$ временных отсчётов.
+
+\begin{table}[H]
+\centering
+\caption{Таблица исходных отсчётов.}
+\small
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+$j$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\ \hline
+$y_j$ & $-0{,}78$ & $-1{,}22$ & $-1{,}34$ & $-1{,}39$ & $-1{,}42$ & $-1{,}43$ & $-1{,}42$ & $-1{,}41$ \\ \hline
+\end{tabular}
+
+\vspace{6pt}
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+$j$ & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 \\ \hline
+$y_j$ & $-1{,}37$ & $-1{,}30$ & $-1{,}10$ & $-0{,}10$ & $1{,}12$ & $1{,}25$ & $1{,}33$ & $1{,}36$ \\ \hline
+\end{tabular}
+\end{table}
+
+Алгоритм вычислений:
+\begin{enumerate}
+    \item Вычислить вектор комплексных амплитуд $F_k$ по формуле прямого дискретного преобразования Фурье.
+    \item По найденному вектору $F_k$ выполнить обратное дискретное преобразование Фурье и сравнить результат с исходным сигналом.
+    \item Разделить исходный вектор на отсчёты с чётными и нечётными индексами.
+    \item Для полученных подвекторов вычислить векторы амплитуд $F^0_k$ и $F^1_k$.
+    \item По формулам быстрого преобразования Фурье получить общий вектор амплитуд $F_k$.
+    \item Выполнить обратные преобразования для $F^0_k$ и $F^1_k$, затем восстановить исходный сигнал.
+\end{enumerate}
+
+Для реализации использован язык \textit{Python}. В программе все преобразования вычисляются явно по формулам методических указаний, без использования готовой функции БПФ.
+
+\subsection*{3.1 Дискретное преобразование Фурье}
+Прямое дискретное преобразование Фурье определяется формулой:
+\[
+F_k=\sum_{j=0}^{n-1}y_j\exp\left(-\frac{2\pi i k}{n}j\right),
+\quad k=0,1,\ldots,n-1.
+\]
+Обратное преобразование определяется формулой:
+\[
+y_j=\frac{1}{n}\sum_{k=0}^{n-1}F_k\exp\left(\frac{2\pi i k}{n}j\right),
+\quad j=0,1,\ldots,n-1.
+\]
+
+Подставим $n=16$ и значения исходных отсчётов в формулу прямого ДПФ:
+\begingroup\scriptsize
+\begin{align*}
+F_k={}&-0{,}78\exp\left(-\frac{2\pi i k}{16}\cdot0\right)
+-1{,}22\exp\left(-\frac{2\pi i k}{16}\cdot1\right)
+-1{,}34\exp\left(-\frac{2\pi i k}{16}\cdot2\right)\\
+&-1{,}39\exp\left(-\frac{2\pi i k}{16}\cdot3\right)
+-1{,}42\exp\left(-\frac{2\pi i k}{16}\cdot4\right)
+-1{,}43\exp\left(-\frac{2\pi i k}{16}\cdot5\right)\\
+&-1{,}42\exp\left(-\frac{2\pi i k}{16}\cdot6\right)
+-1{,}41\exp\left(-\frac{2\pi i k}{16}\cdot7\right)
+-1{,}37\exp\left(-\frac{2\pi i k}{16}\cdot8\right)\\
+&-1{,}30\exp\left(-\frac{2\pi i k}{16}\cdot9\right)
+-1{,}10\exp\left(-\frac{2\pi i k}{16}\cdot10\right)
+-0{,}10\exp\left(-\frac{2\pi i k}{16}\cdot11\right)\\
+&+1{,}12\exp\left(-\frac{2\pi i k}{16}\cdot12\right)
++1{,}25\exp\left(-\frac{2\pi i k}{16}\cdot13\right)\\
+&+1{,}33\exp\left(-\frac{2\pi i k}{16}\cdot14\right)
++1{,}36\exp\left(-\frac{2\pi i k}{16}\cdot15\right).
+\end{align*}
+\endgroup
+
+Например, для первых двух амплитуд:
+\begingroup\small
+\begin{align*}
+F_0={}&-0{,}78-1{,}22-1{,}34-1{,}39-1{,}42-1{,}43-1{,}42-1{,}41\\
+&-1{,}37-1{,}30-1{,}10-0{,}10+1{,}12+1{,}25+1{,}33+1{,}36=-9{,}220000,\\
+F_1\approx{}&5{,}529825+9{,}351469i.
+\end{align*}
+\endgroup
+
+Подставим найденные амплитуды в формулу обратного ДПФ:
+\begingroup\scriptsize
+\begin{align*}
+\hat y_j=\frac{1}{16}\bigl(&-9{,}220000\exp\left(\frac{2\pi i\cdot0}{16}j\right)
++(5{,}529825+9{,}351469i)\exp\left(\frac{2\pi i\cdot1}{16}j\right)\\
+&+(-2{,}486396+5{,}022864i)\exp\left(\frac{2\pi i\cdot2}{16}j\right)
++(-1{,}378383+0{,}540232i)\exp\left(\frac{2\pi i\cdot3}{16}j\right)\\
+&+(0{,}080000+1{,}160000i)\exp\left(\frac{2\pi i\cdot4}{16}j\right)
++(-0{,}991293+1{,}391733i)\exp\left(\frac{2\pi i\cdot5}{16}j\right)\\
+&+(-1{,}213604+0{,}322864i)\exp\left(\frac{2\pi i\cdot6}{16}j\right)
++(-0{,}800149+0{,}042971i)\exp\left(\frac{2\pi i\cdot7}{16}j\right)\\
+&-0{,}740000\exp\left(\frac{2\pi i\cdot8}{16}j\right)
++(-0{,}800149-0{,}042971i)\exp\left(\frac{2\pi i\cdot9}{16}j\right)\\
+&+(-1{,}213604-0{,}322864i)\exp\left(\frac{2\pi i\cdot10}{16}j\right)
++(-0{,}991293-1{,}391733i)\exp\left(\frac{2\pi i\cdot11}{16}j\right)\\
+&+(0{,}080000-1{,}160000i)\exp\left(\frac{2\pi i\cdot12}{16}j\right)
++(-1{,}378383-0{,}540232i)\exp\left(\frac{2\pi i\cdot13}{16}j\right)\\
+&+(-2{,}486396-5{,}022864i)\exp\left(\frac{2\pi i\cdot14}{16}j\right)
++(5{,}529825-9{,}351469i)\exp\left(\frac{2\pi i\cdot15}{16}j\right)\bigr).
+\end{align*}
+\endgroup
+
+\subsection*{3.2 Быстрое преобразование Фурье}
+Вектор отсчётов разделяется на два подвектора половинной длины:
+\[
+y^0_j=y_{2j},\qquad y^1_j=y_{2j+1},\quad j=0,1,\ldots,\frac{n}{2}-1.
+\]
+Для варианта 18:
+\[
+\bar y^0=(-0{,}78,\,-1{,}34,\,-1{,}42,\,-1{,}42,\,-1{,}37,\,-1{,}10,\,1{,}12,\,1{,}33),
+\]
+\[
+\bar y^1=(-1{,}22,\,-1{,}39,\,-1{,}43,\,-1{,}41,\,-1{,}30,\,-0{,}10,\,1{,}25,\,1{,}36).
+\]
+
+Введём обозначение из методических указаний:
+\[
+W_n^{j\cdot k}=\exp\left(-\frac{2\pi i k}{n}j\right).
+\]
+Тогда для подвекторов:
+\[
+F^0_k=\sum_{j=0}^{\frac{n}{2}-1}y_{2j}W_{\frac{n}{2}}^{j\cdot k},
+\qquad
+F^1_k=\sum_{j=0}^{\frac{n}{2}-1}y_{2j+1}W_{\frac{n}{2}}^{j\cdot k}.
+\]
+
+Подставим $n=16$, то есть для подвекторов используется $W_8^{j\cdot k}$:
+\begingroup\scriptsize
+\begin{align*}
+F^0_k={}&-0{,}78\exp\left(-\frac{2\pi i k}{8}\cdot0\right)
+-1{,}34\exp\left(-\frac{2\pi i k}{8}\cdot1\right)
+-1{,}42\exp\left(-\frac{2\pi i k}{8}\cdot2\right)\\
+&-1{,}42\exp\left(-\frac{2\pi i k}{8}\cdot3\right)
+-1{,}37\exp\left(-\frac{2\pi i k}{8}\cdot4\right)
+-1{,}10\exp\left(-\frac{2\pi i k}{8}\cdot5\right)\\
+&+1{,}12\exp\left(-\frac{2\pi i k}{8}\cdot6\right)
++1{,}33\exp\left(-\frac{2\pi i k}{8}\cdot7\right),\\
+F^1_k={}&-1{,}22\exp\left(-\frac{2\pi i k}{8}\cdot0\right)
+-1{,}39\exp\left(-\frac{2\pi i k}{8}\cdot1\right)
+-1{,}43\exp\left(-\frac{2\pi i k}{8}\cdot2\right)\\
+&-1{,}41\exp\left(-\frac{2\pi i k}{8}\cdot3\right)
+-1{,}30\exp\left(-\frac{2\pi i k}{8}\cdot4\right)
+-0{,}10\exp\left(-\frac{2\pi i k}{8}\cdot5\right)\\
+&+1{,}25\exp\left(-\frac{2\pi i k}{8}\cdot6\right)
++1{,}36\exp\left(-\frac{2\pi i k}{8}\cdot7\right).
+\end{align*}
+\endgroup
+
+По формулам БПФ:
+\[
+\begin{cases}
+F_k=F^0_k+W_n^kF^1_k,\\
+F_{k+\frac{n}{2}}=F^0_k-W_n^kF^1_k,
+\end{cases}
+\quad k=0,\ldots,\frac{n}{2}-1.
+\]
+Например, для $k=1$:
+\begingroup\small
+\begin{align*}
+F_1&=(2{,}364838+4{,}654249i)
++\exp\left(-\frac{2\pi i}{16}\right)(1{,}126518+5{,}550854i)\\
+&=5{,}529825+9{,}351469i,\\
+F_9&=(2{,}364838+4{,}654249i)
+-\exp\left(-\frac{2\pi i}{16}\right)(1{,}126518+5{,}550854i)\\
+&=-0{,}800149-0{,}042971i.
+\end{align*}
+\endgroup
+
+Векторы обратных преобразований по чётным и нечётным отсчётам вычисляются по формуле обратного ДПФ для векторов длины $8$:
+\[
+\hat y^0_j=\frac{1}{8}\sum_{k=0}^{7}F^0_k\exp\left(\frac{2\pi i k}{8}j\right),
+\qquad
+\hat y^1_j=\frac{1}{8}\sum_{k=0}^{7}F^1_k\exp\left(\frac{2\pi i k}{8}j\right).
+\]
+Исходный сигнал восстанавливается обратным объединением подвекторов:
+\[
+\hat y_{2j}=\hat y^0_j,\qquad \hat y_{2j+1}=\hat y^1_j.
+\]
+
+\newpage
+
+\section*{4 Результаты}
+
+\subsection*{4.1 Дискретное преобразование Фурье}
+Вектор комплексных амплитуд, полученный по формуле прямого ДПФ:
+
+\begin{table}[H]
+\centering
+\caption{Вектор амплитуд $F(k)$.}
+\small
+\begin{tabular}{|c|c||c|c|}
+\hline
+$k$ & $F(k)$ & $k$ & $F(k)$ \\ \hline
+0 & $-9{,}220000$ & 8 & $-0{,}740000$ \\ \hline
+1 & $5{,}529825+9{,}351469i$ & 9 & $-0{,}800149-0{,}042971i$ \\ \hline
+2 & $-2{,}486396+5{,}022864i$ & 10 & $-1{,}213604-0{,}322864i$ \\ \hline
+3 & $-1{,}378383+0{,}540232i$ & 11 & $-0{,}991293-1{,}391733i$ \\ \hline
+4 & $0{,}080000+1{,}160000i$ & 12 & $0{,}080000-1{,}160000i$ \\ \hline
+5 & $-0{,}991293+1{,}391733i$ & 13 & $-1{,}378383-0{,}540232i$ \\ \hline
+6 & $-1{,}213604+0{,}322864i$ & 14 & $-2{,}486396-5{,}022864i$ \\ \hline
+7 & $-0{,}800149+0{,}042971i$ & 15 & $5{,}529825-9{,}351469i$ \\ \hline
+\end{tabular}
+\end{table}
+
+Результат обратного преобразования совпадает с исходным сигналом с точностью до машинной погрешности.
+
+\begin{table}[H]
+\centering
+\caption{Проверка обратного ДПФ.}
+\small
+\begin{tabular}{|c|c|c|c|}
+\hline
+$j$ & $y_j$ & $\hat y_j$ & $|y_j-\hat y_j|$ \\ \hline
+0 & $-0{,}780000$ & $-0{,}780000$ & $4{,}56\cdot10^{-15}$ \\ \hline
+1 & $-1{,}220000$ & $-1{,}220000$ & $3{,}97\cdot10^{-15}$ \\ \hline
+2 & $-1{,}340000$ & $-1{,}340000$ & $4{,}70\cdot10^{-15}$ \\ \hline
+3 & $-1{,}390000$ & $-1{,}390000$ & $2{,}20\cdot10^{-15}$ \\ \hline
+4 & $-1{,}420000$ & $-1{,}420000$ & $3{,}33\cdot10^{-15}$ \\ \hline
+5 & $-1{,}430000$ & $-1{,}430000$ & $3{,}71\cdot10^{-15}$ \\ \hline
+6 & $-1{,}420000$ & $-1{,}420000$ & $2{,}18\cdot10^{-15}$ \\ \hline
+7 & $-1{,}410000$ & $-1{,}410000$ & $1{,}82\cdot10^{-15}$ \\ \hline
+8 & $-1{,}370000$ & $-1{,}370000$ & $1{,}11\cdot10^{-15}$ \\ \hline
+9 & $-1{,}300000$ & $-1{,}300000$ & $4{,}60\cdot10^{-15}$ \\ \hline
+10 & $-1{,}100000$ & $-1{,}100000$ & $3{,}30\cdot10^{-15}$ \\ \hline
+11 & $-0{,}100000$ & $-0{,}100000$ & $2{,}37\cdot10^{-15}$ \\ \hline
+12 & $1{,}120000$ & $1{,}120000$ & $3{,}34\cdot10^{-15}$ \\ \hline
+13 & $1{,}250000$ & $1{,}250000$ & $2{,}26\cdot10^{-15}$ \\ \hline
+14 & $1{,}330000$ & $1{,}330000$ & $7{,}34\cdot10^{-15}$ \\ \hline
+15 & $1{,}360000$ & $1{,}360000$ & $1{,}57\cdot10^{-15}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection*{4.2 Быстрое преобразование Фурье}
+После разделения исходного сигнала на отсчёты с чётными и нечётными индексами получены следующие вспомогательные векторы амплитуд:
+
+\begin{table}[H]
+\centering
+\caption{Векторы амплитуд $F^0(k)$ и $F^1(k)$.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$k$ & $F^0(k)$ & $F^1(k)$ \\ \hline
+0 & $-4{,}980000$ & $-4{,}240000$ \\ \hline
+1 & $2{,}364838+4{,}654249i$ & $1{,}126518+5{,}550854i$ \\ \hline
+2 & $-1{,}850000+2{,}350000i$ & $-2{,}340000+1{,}440000i$ \\ \hline
+3 & $-1{,}184838-0{,}425751i$ & $-0{,}966518+0{,}190854i$ \\ \hline
+4 & $0{,}080000$ & $-1{,}160000$ \\ \hline
+5 & $-1{,}184838+0{,}425751i$ & $-0{,}966518-0{,}190854i$ \\ \hline
+6 & $-1{,}850000-2{,}350000i$ & $-2{,}340000-1{,}440000i$ \\ \hline
+7 & $2{,}364838-4{,}654249i$ & $1{,}126518-5{,}550854i$ \\ \hline
+\end{tabular}
+\end{table}
+
+По формулам БПФ получен тот же вектор амплитуд $F(k)$, что и при прямом ДПФ (таблица 2). Максимальное отличие между прямым ДПФ и БПФ составило $6{,}58\cdot10^{-14}$.
+
+Векторы обратных преобразований по чётным и нечётным отсчётам:
+\begin{table}[H]
+\centering
+\caption{Векторы $\hat y^0(j)$ и $\hat y^1(j)$.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$j$ & $\hat y^0(j)$ & $\hat y^1(j)$ \\ \hline
+0 & $-0{,}780000$ & $-1{,}220000$ \\ \hline
+1 & $-1{,}340000$ & $-1{,}390000$ \\ \hline
+2 & $-1{,}420000$ & $-1{,}430000$ \\ \hline
+3 & $-1{,}420000$ & $-1{,}410000$ \\ \hline
+4 & $-1{,}370000$ & $-1{,}300000$ \\ \hline
+5 & $-1{,}100000$ & $-0{,}100000$ \\ \hline
+6 & $1{,}120000$ & $1{,}250000$ \\ \hline
+7 & $1{,}330000$ & $1{,}360000$ \\ \hline
+\end{tabular}
+\end{table}
+
+После объединения этих подвекторов восстановлен исходный сигнал. Максимальная погрешность восстановления составила $2{,}50\cdot10^{-15}$.
+
+Как видно из таблиц, обратные преобразования возвращают исходные отсчёты, а отклонения имеют порядок машинной точности.
+
+\newpage
+
+\section*{5 Приложение}
+\lstinputlisting[caption={Файл main.py}, label={lst:lab5code}]{../program/main.py}
+
+\end{document}
