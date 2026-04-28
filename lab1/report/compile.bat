@@ -1,3 +1,3 @@
 latexmk -xelatex -outdir=out report.tex
-rd .\report.pdf
-move .\out\report.pdf .\report.pdf
+if exist .\report.pdf del .\report.pdf
+move /Y .\out\report.pdf .\report.pdf
