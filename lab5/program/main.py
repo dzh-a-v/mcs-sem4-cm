@@ -63,16 +63,38 @@ def fft_decimation_by_time(values):
     return even_values, odd_values, even_amplitudes, odd_amplitudes, amplitudes
 
 
-def inverse_fft_decimation_by_time(even_amplitudes, odd_amplitudes):
-    even_values = inverse_dft(even_amplitudes)
-    odd_values = inverse_dft(odd_amplitudes)
+def inverse_fft_decimation_by_time(amplitudes):
+    n = len(amplitudes)
+    if n % 2 != 0:
+        raise ValueError("The number of amplitudes must be even for radix-2 decimation.")
 
-    values = []
-    for even_value, odd_value in zip(even_values, odd_values):
-        values.append(even_value)
-        values.append(odd_value)
+    even_frequency_amplitudes = amplitudes[0::2]
+    odd_frequency_amplitudes = amplitudes[1::2]
+    half = n // 2
 
-    return even_values, odd_values, values
+    y0 = []
+    y1 = []
+    first_half = []
+    second_half = []
+
+    for j in range(half):
+        y0_j = 0j
+        y1_j = 0j
+        for k in range(half):
+            multiplier = cmath.exp(2j * math.pi * k * j / half)
+            y0_j += even_frequency_amplitudes[k] * multiplier
+            y1_j += odd_frequency_amplitudes[k] * multiplier
+
+        y0_j /= n
+        y1_j /= n
+        y0.append(y0_j)
+        y1.append(y1_j)
+
+        butterfly_multiplier = cmath.exp(2j * math.pi * j / n)
+        first_half.append(y0_j + butterfly_multiplier * y1_j)
+        second_half.append(y0_j - butterfly_multiplier * y1_j)
+
+    return y0, y1, first_half + second_half
 
 
 def clean_number(value, digits=6):
@@ -167,14 +189,11 @@ def main():
     print_complex_vector("DFT by odd samples F^1(k):", odd_amplitudes)
     print_complex_vector("FFT amplitudes F(k):", fft_amplitudes)
 
-    even_restored, odd_restored, fft_restored = inverse_fft_decimation_by_time(
-        even_amplitudes,
-        odd_amplitudes,
-    )
+    y0_inverse, y1_inverse, fft_restored = inverse_fft_decimation_by_time(fft_amplitudes)
 
-    print_complex_vector("Inverse transform by even samples y^0(j):", even_restored, index_name="j")
-    print_complex_vector("Inverse transform by odd samples y^1(j):", odd_restored, index_name="j")
-    print_complex_vector("Restored signal from inverse FFT blocks y(j):", fft_restored, index_name="j")
+    print_complex_vector("Inverse FFT auxiliary vector Y^0(j):", y0_inverse, index_name="j")
+    print_complex_vector("Inverse FFT auxiliary vector Y^1(j):", y1_inverse, index_name="j")
+    print_complex_vector("Restored signal from inverse FFT y(j):", fft_restored, index_name="j")
 
     print_verification(
         "FFT amplitudes compared with direct DFT:",
