@@ -1,0 +1,786 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{russian}
+\setmainfont{Times New Roman}
+\setmonofont{Courier New}
+\newfontfamily\cyrillicfonttt{Courier New}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{geometry}
+\geometry{left=30mm, right=15mm, top=20mm, bottom=20mm}
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\usepackage{xurl}
+\urlstyle{same}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{wasysym}
+\allowdisplaybreaks[3]
+
+\lstset{
+language=Haskell,
+basicstyle=\footnotesize\ttfamily,
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+commentstyle=\color{green!50!black},
+showstringspaces=false,
+breaklines=true,
+frame=single,
+numbers=left,
+numberstyle=\tiny\color{gray},
+stepnumber=1,
+keepspaces=true,
+extendedchars=true,
+inputencoding=utf8
+}
+
+\newcommand{\num}[1]{#1}
+
+\begin{document}
+\sloppy
+\thispagestyle{empty}
+\centering{
+Министерство образования и науки Российской Федерации\\
+Федеральное государственное автономное образовательное учреждение высшего образования\\
+«Санкт-Петербургский политехнический университет Петра Великого»\\[10pt]
+Институт компьютерных наук и кибербезопасности\\
+Высшая школа технологий искусственного интеллекта\\
+02.03.01 Математика и компьютерные науки\\
+\vspace{\fill}
+{\large
+Отчёт по дисциплине\\
+{\Large \bfseries Вычислительная математика}\\
+Лабораторная работа №5\\
+{\Large <<Численное интегрирование>>}\\
+Вариант 18\\
+\vspace{\fill}
+}
+{
+\flushright
+{\bfseries Выполнил:}\\
+студент группы 5130201/40003\\
+Джабраилов А.В.\\
+\hspace{9cm}Подпись: \hrulefill \\
+{\bfseries Принял:}\\
+К. физ.-мат. наук, доц., доц.\\
+Пак В.Г.\\
+\hspace{9cm}Подпись: \hrulefill \\
+\hspace{9cm}<<\rule{1.5cm}{0.4pt}>> \hrulefill\ 2026~г.
+}
+\centering{
+Санкт-Петербург, 2026
+}
+}
+\justifying
+\newpage
+\sloppy
+
+\section*{1 Задание}
+\begin{enumerate}
+    \item Вычислить приближённо определённый интеграл по простейшим формулам при различных шагах разбиения, оценить погрешности приближения.
+    \item Вычислить приближённо значение интеграла по формулам Ньютона--Котеса с различными количествами узлов.
+    \item Вычислить приближённо значение интеграла по формулам Гаусса с различными количествами узлов, оценить погрешности.
+\end{enumerate}
+
+\section*{2 Цель работы}
+Освоить квадратурные формулы численного интегрирования, реализовать простейшие формулы, формулы Ньютона--Котеса и формулы Гаусса для заданного варианта, а также выполнить оценку погрешности там, где она задаётся формулами методических указаний.
+
+\newpage
+
+\section*{3 Ход работы}
+Для варианта 18 необходимо вычислить интеграл от функции
+\[
+    y=\operatorname{arcctg} 2^x
+\]
+на отрезке
+\[
+    x\in[1;3].
+\]
+В программе используется равенство
+\[
+    \operatorname{arcctg} t = \arctan\frac{1}{t}, \qquad t>0.
+\]
+Так как $2^x>0$ на всём рассматриваемом отрезке, подынтегральная функция имеет вид
+\[
+    f(x)=\arctan\frac{1}{2^x}.
+\]
+
+\begin{table}[H]
+\centering
+\caption{Исходные данные варианта 18.}
+\begin{tabular}{|c|c|}
+\hline
+Параметр & Значение \\ \hline
+Функция & $\operatorname{arcctg}2^x$ \\ \hline
+Отрезок интегрирования & $[1;3]$ \\ \hline
+$n$ для формулы Гаусса & $5$ \\ \hline
+$n$ для формулы Ньютона--Котеса & $4$ \\ \hline
+\end{tabular}
+\end{table}
+
+Для выполнения лабораторной работы была создана программа на языке \textit{Haskell}. В программе не используются готовые численные интеграторы и не используется адаптивный метод. Все вычисления выполнены по формулам, приведённым в методических указаниях.
+
+\subsection*{3.1 Простейшие квадратурные формулы}
+Ниже приведён фрагмент кода, реализующий простейшие квадратурные формулы.
+
+\begin{lstlisting}[caption={Фрагмент кода простейших квадратурных формул}]
+leftRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + fromIntegral i * h | i <- [0 .. n - 1]]
+    in h * sum (map func xs)
+
+rightRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + fromIntegral i * h | i <- [1 .. n]]
+    in h * sum (map func xs)
+
+middleRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + (fromIntegral i + 0.5) * h | i <- [0 .. n - 1]]
+    in h * sum (map func xs)
+
+trapezoid n func l r =
+    let h = (r - l) / fromIntegral n
+        innerSum = sum [func (l + fromIntegral i * h) | i <- [1 .. n - 1]]
+    in h * ((func l + func r) / 2.0 + innerSum)
+\end{lstlisting}
+
+По методическим указаниям отрезок $[a;b]$ разбивается на $n$ частичных отрезков равной длины. Шаг и узлы разбиения имеют вид
+\[
+    h=\frac{b-a}{n}, \qquad x_i=a+ih, \qquad i=0,1,\ldots,n.
+\]
+
+Формула левых прямоугольников:
+\[
+    I \approx h\sum_{i=0}^{n-1} f(x_i).
+\]
+Подставим $a=1$, $b=3$, $n=4$:
+\[
+    h=\frac{3-1}{4}=0{,}5,
+    \qquad x_i=1+0{,}5i.
+\]
+\[
+    I^{(4)}_{\text{left}}
+    =0{,}5\left(f(1)+f(1{,}5)+f(2)+f(2{,}5)\right)
+    =0{,}611716113624.
+\]
+
+Формула правых прямоугольников:
+\[
+    I \approx h\sum_{i=1}^{n} f(x_i).
+\]
+Подставим $a=1$, $b=3$, $n=4$:
+\[
+    I^{(4)}_{\text{right}}
+    =0{,}5\left(f(1{,}5)+f(2)+f(2{,}5)+f(3)\right)
+    =0{,}442069806397.
+\]
+
+Формула центральных прямоугольников:
+\[
+    I \approx h\sum_{i=0}^{n-1} f\left(x_i+\frac{h}{2}\right).
+\]
+Подставим $a=1$, $b=3$, $n=4$:
+\[
+    I^{(4)}_{\text{middle}}
+    =0{,}5\left(f(1{,}25)+f(1{,}75)+f(2{,}25)+f(2{,}75)\right)
+    =0{,}520882771903.
+\]
+
+Формула трапеций:
+\[
+    I \approx h\left(\frac{f(a)+f(b)}{2}+\sum_{i=1}^{n-1} f(x_i)\right).
+\]
+Подставим $a=1$, $b=3$, $n=4$:
+\[
+    I^{(4)}_{\text{trap}}
+    =0{,}5\left(\frac{f(1)+f(3)}{2}+f(1{,}5)+f(2)+f(2{,}5)\right)
+    =0{,}526892960010.
+\]
+
+Формула парабол:
+\[
+    I \approx \frac{h}{6}\left(f(a)+f(b)+4\sum_{i=0}^{n-1} f\left(x_i+\frac{h}{2}\right)+2\sum_{i=1}^{n-1}f(x_i)\right).
+\]
+В программе значение по формуле парабол вычисляется на равномерной сетке с чётным числом промежутков. Для $n=4$ получено
+\[
+    I^{(4)}_{\text{Simp}}=0{,}522863958380.
+\]
+
+Оценки погрешностей простейших формул взяты из методических указаний:
+\[
+    |R|\leq \frac{b-a}{2}hM_1,
+    \qquad M_1=\max_{x\in[a;b]}|f'(x)|,
+\]
+\[
+    |R|\leq \frac{b-a}{24}h^2M_2,
+    \qquad M_2=\max_{x\in[a;b]}|f''(x)|,
+\]
+\[
+    |R|\leq \frac{b-a}{12}h^2M_2,
+    \qquad M_2=\max_{x\in[a;b]}|f''(x)|,
+\]
+\[
+    |R|\leq \frac{b-a}{180}h^4M_4,
+    \qquad M_4=\max_{x\in[a;b]}|f^{(4)}(x)|.
+\]
+Вычисленные значения максимумов, использованные в программе:
+\[
+    M_1=0{,}2772588722239781,\quad
+    M_2=0{,}12011325347892068,
+\]
+\[
+    M_4=0{,}15733720319422967,\quad
+    M_6=0{,}3128065157082597.
+\]
+
+\subsection*{3.2 Формулы Ньютона--Котеса}
+Ниже приведён фрагмент кода, реализующий формулы Ньютона--Котеса.
+
+\begin{lstlisting}[caption={Фрагмент кода формул Ньютона--Котеса}]
+newtonCotesData n =
+    case n of
+        1 -> Just (1.0 / 2.0, [1.0, 1.0], 1.0 / 12.0)
+        2 -> Just (1.0 / 3.0, [1.0, 4.0, 1.0], 1.0 / 90.0)
+        3 -> Just (3.0 / 8.0, [1.0, 3.0, 3.0, 1.0], 3.0 / 80.0)
+        4 -> Just (2.0 / 45.0, [7.0, 32.0, 12.0, 32.0, 7.0], 8.0 / 945.0)
+        5 -> Just (5.0 / 288.0, [19.0, 75.0, 50.0, 50.0, 75.0, 19.0], 275.0 / 12096.0)
+        _ -> Nothing
+
+newtonCotes n func l r =
+    case newtonCotesData n of
+        Just (bn, coeffs, _) ->
+            let h = (r - l) / fromIntegral n
+                xs = [l + fromIntegral i * h | i <- [0 .. n]]
+            in bn * h * sum (zipWith (*) coeffs (map func xs))
+\end{lstlisting}
+
+Формула Ньютона--Котеса из методических указаний:
+\[
+    \int_a^b f(x)\,dx \approx B_nh\sum_{i=0}^{n}a_i^{(n)}f(x_i),
+\]
+где
+\[
+    x_i=a+ih,\qquad i=0,1,\ldots,n,
+    \qquad h=\frac{b-a}{n}.
+\]
+
+Для варианта 18 задано $n=4$. По таблице коэффициентов:
+\[
+    B_4=\frac{2}{45},\qquad
+    a_0^{(4)}=7,
+    \quad a_1^{(4)}=32,
+    \quad a_2^{(4)}=12,
+    \quad a_3^{(4)}=32,
+    \quad a_4^{(4)}=7.
+\]
+Шаг равен
+\[
+    h=\frac{3-1}{4}=0{,}5.
+\]
+Узлы имеют вид
+\[
+    x_0=1,\quad x_1=1{,}5,\quad x_2=2,\quad x_3=2{,}5,\quad x_4=3.
+\]
+Подставим числа в формулу:
+\[
+    I_{NC}^{(4)}=\frac{2}{45}\cdot0{,}5\left(
+    7f(1)+32f(1{,}5)+12f(2)+32f(2{,}5)+7f(3)
+    \right).
+\]
+\[
+    I_{NC}^{(4)}=0{,}522878949915.
+\]
+
+Остаточный член для $n=4$ по таблице методических указаний:
+\[
+    r_4(h)=-\frac{8h^7}{945}f^{VI}(\xi).
+\]
+Для оценки предельной погрешности используем модуль остаточного члена:
+\[
+    |r_4(h)|\leq \frac{8h^7}{945}M_6.
+\]
+Подставим числа:
+\[
+    |r_4(h)|\leq
+    \frac{8\cdot0{,}5^7}{945}\cdot0{,}3128065157082597
+    =2{,}068826162092\cdot10^{-5}.
+\]
+
+\subsection*{3.3 Формулы Гаусса}
+Ниже приведён фрагмент кода, реализующий формулы Гаусса.
+
+\begin{lstlisting}[caption={Фрагмент кода формул Гаусса}]
+gaussData n =
+    case n of
+        2 -> Just [(-0.577350, 1.0), (0.577350, 1.0)]
+        3 -> Just [(-0.774597, 5.0 / 9.0), (0.0, 8.0 / 9.0), (0.774597, 5.0 / 9.0)]
+        4 -> Just [(-0.861136, 0.347855), (-0.339981, 0.652145),
+                   (0.339981, 0.652145), (0.861136, 0.347855)]
+        5 -> Just [(-0.906180, 0.236927), (-0.538469, 0.478629),
+                   (0.0, 0.568889), (0.538469, 0.478629),
+                   (0.906180, 0.236927)]
+        _ -> Nothing
+
+gauss n func l r =
+    case gaussData n of
+        Just pairs ->
+            let mid = (l + r) / 2.0
+                half = (r - l) / 2.0
+                oneTerm (x, weight) = weight * func (mid + half * x)
+            in half * sum (map oneTerm pairs)
+\end{lstlisting}
+
+В методических указаниях таблица узлов и весов Гаусса приведена для интеграла
+\[
+    \int_{-1}^{1}f(x)\,dx.
+\]
+Если интеграл вычисляется на отрезке $[a;b]$, то узлы пересчитываются по формуле
+\[
+    t_i=\frac{a+b}{2}+\frac{b-a}{2}x_i.
+\]
+Тогда
+\[
+    \int_a^b f(t)\,dt \approx \frac{b-a}{2}\sum_{i=1}^{n}A_if(t_i).
+\]
+
+Для варианта 18 задано $n=5$. По таблице Гаусса:
+\[
+\begin{array}{c|c}
+    x_i & A_i \\ \hline
+    -0{,}906180 & 0{,}236927 \\
+    -0{,}538469 & 0{,}478629 \\
+    0 & 0{,}568889 \\
+    0{,}538469 & 0{,}478629 \\
+    0{,}906180 & 0{,}236927
+\end{array}
+\]
+Для отрезка $[1;3]$ имеем
+\[
+    \frac{a+b}{2}=2,\qquad \frac{b-a}{2}=1.
+\]
+Следовательно,
+\[
+    t_i=2+x_i.
+\]
+Получим узлы на отрезке $[1;3]$:
+\[
+    t_1=1{,}093820,\quad
+    t_2=1{,}461531,\quad
+    t_3=2,
+    \quad t_4=2{,}538469,
+    \quad t_5=2{,}906180.
+\]
+Подставим числа в формулу:
+\begingroup\small
+\[
+\begin{aligned}
+I_G^{(5)}={}&1\cdot\bigl(
+0{,}236927f(1{,}093820)+0{,}478629f(1{,}461531)+0{,}568889f(2)\,+{}\\
+&{}+0{,}478629f(2{,}538469)+0{,}236927f(2{,}906180)
+\bigr).
+\end{aligned}
+\]
+\endgroup
+\[
+    I_G^{(5)}=0{,}522887989168.
+\]
+
+\newpage
+
+\section*{4 Результаты}
+
+\subsection*{4.1 Простейшие квадратурные формулы}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формуле левых прямоугольников.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+4 & $0{,}611716113624$ & $1{,}386294361120\cdot10^{-1}$ \\ \hline
+8 & $0{,}566299442763$ & $6{,}931471805599\cdot10^{-2}$ \\ \hline
+16 & $0{,}544343483804$ & $3{,}465735902800\cdot10^{-2}$ \\ \hline
+32 & $0{,}533553116652$ & $1{,}732867951400\cdot10^{-2}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формуле правых прямоугольников.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+4 & $0{,}442069806397$ & $1{,}386294361120\cdot10^{-1}$ \\ \hline
+8 & $0{,}481476289150$ & $6{,}931471805599\cdot10^{-2}$ \\ \hline
+16 & $0{,}501931906998$ & $3{,}465735902800\cdot10^{-2}$ \\ \hline
+32 & $0{,}512347328249$ & $1{,}732867951400\cdot10^{-2}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формуле центральных прямоугольников.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+4 & $0{,}520882771903$ & $2{,}502359447478\cdot10^{-3}$ \\ \hline
+8 & $0{,}522387524845$ & $6{,}255898618694\cdot10^{-4}$ \\ \hline
+16 & $0{,}522762749500$ & $1{,}563974654673\cdot10^{-4}$ \\ \hline
+32 & $0{,}522856494709$ & $3{,}909936636684\cdot10^{-5}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формуле трапеций.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+4 & $0{,}526892960010$ & $5{,}004718894955\cdot10^{-3}$ \\ \hline
+8 & $0{,}523887865957$ & $1{,}251179723739\cdot10^{-3}$ \\ \hline
+16 & $0{,}523137695401$ & $3{,}127949309347\cdot10^{-4}$ \\ \hline
+32 & $0{,}522950222451$ & $7{,}819873273367\cdot10^{-5}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формуле парабол.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+4 & $0{,}522863958380$ & $1{,}092619466627\cdot10^{-4}$ \\ \hline
+8 & $0{,}522886167939$ & $6{,}828871666416\cdot10^{-6}$ \\ \hline
+16 & $0{,}522887638549$ & $4{,}268044791510\cdot10^{-7}$ \\ \hline
+32 & $0{,}522887731467$ & $2{,}667527994694\cdot10^{-8}$ \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection*{4.2 Формулы Ньютона--Котеса}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формулам Ньютона--Котеса.}
+\small
+\begin{tabular}{|c|c|c|}
+\hline
+$n$ & Значение интеграла & Оценка погрешности \\ \hline
+1 & $0{,}588002603548$ & $8{,}007550231928\cdot10^{-2}$ \\ \hline
+2 & $0{,}522639085352$ & $1{,}748191146603\cdot10^{-3}$ \\ \hline
+3 & $0{,}522768406589$ & $7{,}769738429345\cdot10^{-4}$ \\ \hline
+4 & $0{,}522878949915$ & $2{,}068826162092\cdot10^{-5}$ \\ \hline
+5 & $0{,}522882856072$ & $1{,}165162894490\cdot10^{-5}$ \\ \hline
+\end{tabular}
+\end{table}
+
+Для варианта 18 по формуле Ньютона--Котеса с $n=4$ получено
+\[
+    I_{NC}^{(4)}=0{,}522878949915,
+    \qquad |r_4(h)|\leq2{,}068826162092\cdot10^{-5}.
+\]
+
+\subsection*{4.3 Формулы Гаусса}
+
+\begin{table}[H]
+\centering
+\caption{Результаты по формулам Гаусса.}
+\small
+\begin{tabular}{|c|c|}
+\hline
+Количество узлов & Значение интеграла \\ \hline
+2 & $0{,}523045828497$ \\ \hline
+3 & $0{,}522896341738$ \\ \hline
+4 & $0{,}522887598540$ \\ \hline
+5 & $0{,}522887989168$ \\ \hline
+\end{tabular}
+\end{table}
+
+Для варианта 18 по формуле Гаусса с пятью узлами получено
+\[
+    I_G^{(5)}=0{,}522887989168.
+\]
+Так как в методических указаниях для таблицы узлов и весов Гаусса не приведён явный остаточный член, в программе выводятся приближённые значения при разных количествах узлов.
+
+\newpage
+
+\section*{5 Вывод}
+В ходе лабораторной работы были реализованы формулы численного интегрирования для варианта 18. Для функции $f(x)=\operatorname{arcctg}2^x$ на отрезке $[1;3]$ были вычислены приближённые значения интеграла по простейшим квадратурным формулам, по формулам Ньютона--Котеса и по формулам Гаусса.
+
+При увеличении числа разбиений в простейших формулах значения интеграла стабилизируются около $0{,}52288$. Формулы центральных прямоугольников, трапеций и парабол дают более точные результаты, чем формулы левых и правых прямоугольников. Для заданного варианта получены основные ответы:
+\[
+    I_{NC}^{(4)}=0{,}522878949915,
+    \qquad
+    I_G^{(5)}=0{,}522887989168.
+\]
+
+\newpage
+
+\section*{6 Приложение}
+\begin{lstlisting}[caption={Файл Main.hs}, label={lst:lab6code}]
+module Main where
+
+import Text.Printf
+
+a :: Double
+a = 1.0
+
+b :: Double
+b = 3.0
+
+f :: Double -> Double
+f x = atan (1.0 / (2.0 ** x))
+
+m1 :: Double
+m1 = 0.2772588722239781
+
+m2 :: Double
+m2 = 0.12011325347892068
+
+m4 :: Double
+m4 = 0.15733720319422967
+
+m6 :: Double
+m6 = 0.3128065157082597
+
+leftRect :: Int -> (Double -> Double) -> Double -> Double -> Double
+leftRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + fromIntegral i * h | i <- [0 .. n - 1]]
+    in h * sum (map func xs)
+
+rightRect :: Int -> (Double -> Double) -> Double -> Double -> Double
+rightRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + fromIntegral i * h | i <- [1 .. n]]
+    in h * sum (map func xs)
+
+middleRect :: Int -> (Double -> Double) -> Double -> Double -> Double
+middleRect n func l r =
+    let h = (r - l) / fromIntegral n
+        xs = [l + (fromIntegral i + 0.5) * h | i <- [0 .. n - 1]]
+    in h * sum (map func xs)
+
+trapezoid :: Int -> (Double -> Double) -> Double -> Double -> Double
+trapezoid n func l r =
+    let h = (r - l) / fromIntegral n
+        innerSum = sum [func (l + fromIntegral i * h) | i <- [1 .. n - 1]]
+    in h * ((func l + func r) / 2.0 + innerSum)
+
+simpsonComposite :: Int -> (Double -> Double) -> Double -> Double -> Double
+simpsonComposite nRaw func l r =
+    let n = if even nRaw then nRaw else nRaw + 1
+        h = (r - l) / fromIntegral n
+        oddSum = sum [func (l + fromIntegral i * h) | i <- [1,3 .. n - 1]]
+        evenSum = sum [func (l + fromIntegral i * h) | i <- [2,4 .. n - 2]]
+    in h / 3.0 * (func l + func r + 4.0 * oddSum + 2.0 * evenSum)
+
+leftRightErrorBound :: Int -> Double
+leftRightErrorBound n =
+    let h = (b - a) / fromIntegral n
+    in (b - a) * h / 2.0 * m1
+
+middleErrorBound :: Int -> Double
+middleErrorBound n =
+    let h = (b - a) / fromIntegral n
+    in (b - a) * h * h / 24.0 * m2
+
+trapezoidErrorBound :: Int -> Double
+trapezoidErrorBound n =
+    let h = (b - a) / fromIntegral n
+    in (b - a) * h * h / 12.0 * m2
+
+simpsonErrorBound :: Int -> Double
+simpsonErrorBound nRaw =
+    let n = if even nRaw then nRaw else nRaw + 1
+        h = (b - a) / fromIntegral n
+    in (b - a) * h ** 4.0 / 180.0 * m4
+
+newtonCotesData :: Int -> Maybe (Double, [Double], Double)
+newtonCotesData n =
+    case n of
+        1 -> Just (1.0 / 2.0, [1.0, 1.0], 1.0 / 12.0)
+        2 -> Just (1.0 / 3.0, [1.0, 4.0, 1.0], 1.0 / 90.0)
+        3 -> Just (3.0 / 8.0, [1.0, 3.0, 3.0, 1.0], 3.0 / 80.0)
+        4 -> Just (2.0 / 45.0, [7.0, 32.0, 12.0, 32.0, 7.0], 8.0 / 945.0)
+        5 -> Just (5.0 / 288.0, [19.0, 75.0, 50.0, 50.0, 75.0, 19.0], 275.0 / 12096.0)
+        _ -> Nothing
+
+newtonCotes :: Int -> (Double -> Double) -> Double -> Double -> Double
+newtonCotes n func l r =
+    case newtonCotesData n of
+        Nothing -> error "Unsupported Newton-Cotes n"
+        Just (bn, coeffs, _) ->
+            let h = (r - l) / fromIntegral n
+                xs = [l + fromIntegral i * h | i <- [0 .. n]]
+                values = map func xs
+            in bn * h * sum (zipWith (*) coeffs values)
+
+newtonCotesErrorBound :: Int -> Double
+newtonCotesErrorBound n =
+    case newtonCotesData n of
+        Nothing -> error "Unsupported Newton-Cotes n"
+        Just (_, _, c) ->
+            let h = (b - a) / fromIntegral n
+            in case n of
+                1 -> c * h ** 3.0 * m2
+                2 -> c * h ** 5.0 * m4
+                3 -> c * h ** 5.0 * m4
+                4 -> c * h ** 7.0 * m6
+                5 -> c * h ** 7.0 * m6
+                _ -> error "Unsupported Newton-Cotes n"
+
+gaussData :: Int -> Maybe [(Double, Double)]
+gaussData n =
+    case n of
+        2 -> Just
+            [ (-0.577350, 1.0)
+            , ( 0.577350, 1.0)
+            ]
+        3 -> Just
+            [ (-0.774597, 5.0 / 9.0)
+            , ( 0.0,      8.0 / 9.0)
+            , ( 0.774597, 5.0 / 9.0)
+            ]
+        4 -> Just
+            [ (-0.861136, 0.347855)
+            , (-0.339981, 0.652145)
+            , ( 0.339981, 0.652145)
+            , ( 0.861136, 0.347855)
+            ]
+        5 -> Just
+            [ (-0.906180, 0.236927)
+            , (-0.538469, 0.478629)
+            , ( 0.0,      0.568889)
+            , ( 0.538469, 0.478629)
+            , ( 0.906180, 0.236927)
+            ]
+        _ -> Nothing
+
+gauss :: Int -> (Double -> Double) -> Double -> Double -> Double
+gauss n func l r =
+    case gaussData n of
+        Nothing -> error "Unsupported Gauss n"
+        Just pairs ->
+            let mid = (l + r) / 2.0
+                half = (r - l) / 2.0
+                oneTerm (x, weight) = weight * func (mid + half * x)
+            in half * sum (map oneTerm pairs)
+
+printLine :: IO ()
+printLine = putStrLn "------------------------------------------------------------"
+
+printSimpleResult :: String -> Int -> Double -> Double -> IO ()
+printSimpleResult name n value bound = do
+    printf "%-20s n = %-4d value = %.12f  error_bound = %.12e\n"
+        name n value bound
+
+printNCResult :: Int -> Double -> Double -> IO ()
+printNCResult n value bound = do
+    printf "Newton-Cotes         n = %-4d value = %.12f  error_bound = %.12e\n"
+        n value bound
+
+printGaussResult :: Int -> Double -> IO ()
+printGaussResult n value = do
+    printf "Gauss                n = %-4d value = %.12f\n"
+        n value
+
+main :: IO ()
+main = do
+    putStrLn "Lab 5. Numerical integration"
+    putStrLn "Variant 18"
+    putStrLn "Function: y = arccot(2^x)"
+    putStrLn "Interval: [1; 3]"
+    printLine
+
+    putStrLn "Task 1. Simple composite formulas with different partition steps"
+    putStrLn "Columns: formula, n, approximate value, theoretical error bound"
+    printLine
+
+    let parts = [4, 8, 16, 32]
+
+    mapM_ (\n -> do
+            let value = leftRect n f a b
+            let bound = leftRightErrorBound n
+            printSimpleResult "Left rectangles" n value bound) parts
+
+    printLine
+
+    mapM_ (\n -> do
+            let value = rightRect n f a b
+            let bound = leftRightErrorBound n
+            printSimpleResult "Right rectangles" n value bound) parts
+
+    printLine
+
+    mapM_ (\n -> do
+            let value = middleRect n f a b
+            let bound = middleErrorBound n
+            printSimpleResult "Middle rectangles" n value bound) parts
+
+    printLine
+
+    mapM_ (\n -> do
+            let value = trapezoid n f a b
+            let bound = trapezoidErrorBound n
+            printSimpleResult "Trapezoid" n value bound) parts
+
+    printLine
+
+    mapM_ (\n -> do
+            let value = simpsonComposite n f a b
+            let bound = simpsonErrorBound n
+            printSimpleResult "Simpson" n value bound) parts
+
+    printLine
+
+    putStrLn "Task 2. Newton-Cotes formulas with different n"
+    putStrLn "Columns: n, approximate value, theoretical error bound"
+    printLine
+
+    mapM_ (\n -> do
+            let value = newtonCotes n f a b
+            let bound = newtonCotesErrorBound n
+            printNCResult n value bound) [1 .. 5]
+
+    printLine
+
+    putStrLn "Task 3. Gauss formulas with different number of nodes"
+    putStrLn "Columns: nodes count, approximate value"
+    printLine
+
+    mapM_ (\n -> do
+            let value = gauss n f a b
+            printGaussResult n value) [2 .. 5]
+
+    printLine
+
+    putStrLn "Variant-specific results"
+    let variantNC = newtonCotes 4 f a b
+    let variantNCBound = newtonCotesErrorBound 4
+    let variantGauss = gauss 5 f a b
+
+    printf "Newton-Cotes n = 4 value = %.12f\n" variantNC
+    printf "Newton-Cotes n = 4 error_bound = %.12e\n" variantNCBound
+    printf "Gauss n = 5 value = %.12f\n" variantGauss
+
+    printLine
+    putStrLn "Done."
+\end{lstlisting}
+
+\end{document}
